@@ -1,0 +1,7 @@
+{
+  "Enabled": true,
+  "LogEnabled": true,
+  "Sound": "correo.wav",
+  "Volume": 1.0,
+  "Repeat": 1
+}
