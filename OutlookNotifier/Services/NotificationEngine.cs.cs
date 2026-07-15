@@ -21,8 +21,6 @@ namespace OutlookNotifier.Services
             this.application = application;
 
             processor = new NotificationProcessor(application);
-
-            InitializeIgnoredFolders();
         }
 
         public void Start()
@@ -31,31 +29,40 @@ namespace OutlookNotifier.Services
 
             foreach (Store store in session.Stores)
             {
+                InitializeIgnoredFolders(store);
+
                 ScanFolder(store.GetRootFolder());
             }
 
             Logger.Write("NotificationEngine iniciado.");
         }
 
-        private void InitializeIgnoredFolders()
+        private void InitializeIgnoredFolders(Store store)
         {
-            NameSpace session = application.Session;
+            AddIgnoredFolder(store, OlDefaultFolders.olFolderDrafts);
+            AddIgnoredFolder(store, OlDefaultFolders.olFolderDeletedItems);
+            AddIgnoredFolder(store, OlDefaultFolders.olFolderOutbox);
+            AddIgnoredFolder(store, OlDefaultFolders.olFolderSentMail);
+        }
 
-            ignoredFolders.Add(
-                session.GetDefaultFolder(
-                    OlDefaultFolders.olFolderDrafts).EntryID);
+        private void AddIgnoredFolder(
+            Store store,
+            OlDefaultFolders folderType)
+        {
+            try
+            {
+                MAPIFolder folder = store.GetDefaultFolder(folderType);
 
-            ignoredFolders.Add(
-                session.GetDefaultFolder(
-                    OlDefaultFolders.olFolderDeletedItems).EntryID);
-
-            ignoredFolders.Add(
-                session.GetDefaultFolder(
-                    OlDefaultFolders.olFolderOutbox).EntryID);
-
-            ignoredFolders.Add(
-                session.GetDefaultFolder(
-                    OlDefaultFolders.olFolderSentMail).EntryID);
+                if (folder != null)
+                {
+                    ignoredFolders.Add(folder.EntryID);
+                }
+            }
+            catch
+            {
+                // Algunos Stores (PST, IMAP, buzones compartidos, etc.)
+                // pueden no contener todas las carpetas predeterminadas.
+            }
         }
 
         private void ScanFolder(MAPIFolder folder)
